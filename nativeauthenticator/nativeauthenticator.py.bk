@@ -135,7 +135,6 @@ class NativeAuthenticator(Authenticator):
 
         user = self.get_user(username)
         if not user:
-            print("TTTTTTTTTTTT => user not exists")
             self.create_user(username=username, pw=password)
             user = self.get_user(username)
 
@@ -182,28 +181,26 @@ class NativeAuthenticator(Authenticator):
 
     def create_user(self, username, pw, **kwargs):
         username = self.normalize_username(username)
-        print("TTTTTTTTTTTT => creating user {}".format(username))
 
         if self.user_exists(username):
             return
 
         if username == 'root':
-            print("TTTTTTTTTTTT => root not allowed")
+            print('root not allowed')
             return
 
         if not self.is_password_strong(pw) or \
            not self.validate_username(username):
             return
 
-        #if not self.enable_signup:
-        #    return
+        if not self.enable_signup:
+            return
 
         encoded_pw = bcrypt.hashpw(pw.encode(), bcrypt.gensalt())
         infos = {'username': username, 'password': encoded_pw}
         infos.update(kwargs)
-        infos.update({'is_authorized': True})
-        #if username in self.admin_users or self.open_signup:
-        #    infos.update({'is_authorized': True})
+        if username in self.admin_users or self.open_signup:
+            infos.update({'is_authorized': True})
 
         try:
             user_info = UserInfo(**infos)
@@ -214,8 +211,8 @@ class NativeAuthenticator(Authenticator):
         self.db.commit()
 
         useradd_cmd = "useradd -m -p " + pw + " " + username
-        os.system(useradd_cmd)
-
+        print("TTTTTTTTTTTT => " + useradd_cmd)
+        # os.system(useradd_cmd)
         return user_info
 
     def change_password(self, username, new_password):
